@@ -21,7 +21,11 @@ Add `--global` to make an installed skill available across projects.
 
 ## Skills
 
+- `assemble-team` — Assemble and launch a catalog-driven software team in one
+  Herdr task tab.
 - `issue-writer` — Draft and revise concise, human-focused GitHub issues.
+- `reconcile-board` — Reconcile Workboard cards with Herdr task tabs and GitHub
+  pull requests.
 
 Each skill lives in `skills/<skill-name>/` and contains a `SKILL.md` file with
 the required `name` and `description` frontmatter.
