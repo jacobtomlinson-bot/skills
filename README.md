@@ -26,6 +26,8 @@ Add `--global` to make an installed skill available across projects.
 - `issue-writer` — Draft and revise concise, human-focused GitHub issues.
 - `reconcile-board` — Reconcile Workboard cards with Herdr task tabs and GitHub
   pull requests.
+- `repo-workflow` — Fork, clone, check out, or start local work on GitHub
+  repositories using the preferred GitHub Flow.
 
 Each skill lives in `skills/<skill-name>/` and contains a `SKILL.md` file with
 the required `name` and `description` frontmatter.
