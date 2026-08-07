@@ -29,5 +29,6 @@ Add `--global` to make an installed skill available across projects.
 - `repo-workflow` — Fork, clone, check out, or start local work on GitHub
   repositories using the preferred GitHub Flow.
 
-Each skill lives in `skills/<skill-name>/` and contains a `SKILL.md` file with
-the required `name` and `description` frontmatter.
+General skills live in `skills/<skill-name>/`. Automaintainer skills live in
+`skills/automaintainer/<skill-name>/`. Every leaf skill directory contains a
+`SKILL.md` file with the required `name` and `description` frontmatter.

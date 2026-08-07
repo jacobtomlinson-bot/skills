@@ -20,6 +20,16 @@ Resolve before launch:
 
 Read `references/persona-catalog.md` completely. Treat it as the sole authority for available personas, selection rules, required companions, responsibilities, skills, quality gates, and completion ownership. Resolve persona template paths relative to this skill and pass each selected template's absolute path in that agent's initial prompt.
 
+## Existing-team preflight
+
+Before selecting personas, inspect the repository's existing Herdr workspace, task tabs, and live agents for a team already covering this task. Match conservatively using the Workboard card ID, issue or PR URL/number, task slug, repository, and task brief.
+
+1. If no credible match exists, record that the preflight found no existing team and continue to team selection.
+2. If a matching or materially overlapping team exists, report its task tab, agents and states, linked PR or issue, and the evidence used to match it.
+3. Stop before creating panes, starting agents, sending work prompts, or cleaning up the candidate team. Ask the human to choose one of: reuse/nudge the existing team; create a deliberately parallel replacement team; or clean up the old team and start fresh.
+4. Resume only after the human makes that choice. Preserve the chosen team's existing checkout, tab, and agent state unless the human explicitly selected cleanup.
+5. If identity, task overlap, or tab ownership is ambiguous, treat it as an existing-team match and ask for direction rather than risking duplicate work.
+
 ## Team selection
 
 1. Match task capabilities to catalog entries.
