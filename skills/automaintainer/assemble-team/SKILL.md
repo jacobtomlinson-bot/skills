@@ -20,6 +20,23 @@ Resolve before launch:
 
 Read `references/persona-catalog.md` completely. Treat it as the sole authority for available personas, selection rules, required companions, responsibilities, skills, quality gates, and completion ownership. Resolve persona template paths relative to this skill and pass each selected template's absolute path in that agent's initial prompt.
 
+## Herdr access context
+
+This skill may coordinate Herdr from either inside or outside a Herdr-managed pane. Its bounded remote-coordination branch is an explicit exception to the generic `herdr` skill's `HERDR_ENV=1` guard.
+
+When `HERDR_ENV=1`, follow the `herdr` skill normally. When it is absent:
+
+1. Verify that the Herdr CLI can list workspaces, then resolve the exact project workspace by repository root. CLI connectivity plus an unambiguous repository match authorizes only the bounded operations below.
+2. Use explicit workspace, tab, pane, and agent IDs for every command. Never use focused-session defaults, `--current`, or inherited `HERDR_*` identifiers.
+3. Limit remote coordination to:
+   - read-only preflight and status checks for the matched project workspace;
+   - one-off creation of one task tab and its team panes, agent launches, initial briefs, operator screensaver, and completion-owner handoff verification;
+   - a human-requested follow-up to an unambiguously matched idle team, including its Workboard transition, prompt submission to the completion owner, and transition-to-`working` verification.
+4. Preserve UI focus with `--no-focus`. Leave unrelated workspaces, tabs, panes, and agents untouched, and leave cleanup to an inside-Herdr operator unless the human explicitly requests exact-target cleanup.
+5. If the Herdr CLI is unavailable, the repository-to-workspace match is ambiguous, or an exact target cannot be resolved, stop before mutation and report the blocker.
+
+Remote access is ready when the exact project workspace is resolved and every planned command has an explicit target.
+
 ## Existing-team preflight
 
 Before selecting personas, inspect the repository's existing Herdr workspace, task tabs, and live agents for a team already covering this task. Match conservatively using the Workboard card ID, issue or PR URL/number, task slug, repository, and task brief.
@@ -29,6 +46,27 @@ Before selecting personas, inspect the repository's existing Herdr workspace, ta
 3. Stop before creating panes, starting agents, sending work prompts, or cleaning up the candidate team. Ask the human to choose one of: reuse/nudge the existing team; create a deliberately parallel replacement team; or clean up the old team and start fresh.
 4. Resume only after the human makes that choice. Preserve the chosen team's existing checkout, tab, and agent state unless the human explicitly selected cleanup.
 5. If identity, task overlap, or tab ownership is ambiguous, treat it as an existing-team match and ask for direction rather than risking duplicate work.
+
+## Workboard transitions
+
+Every Herdr work interval must have a matching Workboard lifecycle interval. When a card must move to `running`:
+
+1. Verify the exact card ID and its current status first.
+2. Use a supported Workboard command or API when available.
+3. If no transition command is exposed, manually update the exact card in the Workboard SQLite database in one transaction: update the card status and timestamps, and insert a `moved` audit event with the previous and new status. Never leave a directly launched Herdr team represented as `todo` merely because the CLI lacks an update command.
+4. Verify the result with `openclaw workboard show <card-id>` before proceeding.
+
+## Existing-team reactivation
+
+When the human chooses reuse/nudge or explicitly asks an idle team to perform follow-up engineering work, treat it as a new work interval, not as a comment on a completed team. This branch may use the bounded remote-coordination exception above.
+
+1. Verify the matched completion owner is `idle` or `done`. If it is already `working` or `blocked`, report that state instead of stacking a new prompt.
+2. Inspect the Workboard card and select the lifecycle path before submitting a Herdr prompt: `review` → `running` with reactivation evidence; `todo` → `running` with the existing-team match; or the defined blocked path for a blocked card.
+3. Apply the Workboard transition procedure before prompting the team; record the existing-team match and the human's follow-up request as handoff evidence.
+4. Submit the follow-up through the existing team’s designated completion owner, then verify that owner transitions to `working`. If submission fails or the owner does not transition, restore or report the card’s accurate state rather than leaving it falsely `running`.
+5. On the owner’s completion callback, reconcile the new evidence normally: `running` → `review` for an open deliverable ready for Jacob’s review, or apply the blocked/failed path.
+
+Reactivation is complete when the completion owner is working on the submitted follow-up and the Workboard card records the matching active interval.
 
 ## Team selection
 
@@ -94,7 +132,7 @@ Only the catalog-designated completion owner sends the final OpenClaw callback. 
 After all briefs are submitted:
 
 1. Verify the catalog-designated completion owner transitioned to `working`; correct a missed submission if needed.
-2. Move the card to `running`.
+2. Apply the Workboard transition procedure to move the card to `running`.
 3. Return without waiting or polling.
 
 Do not require every selected agent to transition to `working` before moving the card. Terminal outcomes come from the completion callback and are reconciled according to the local tools instructions.
